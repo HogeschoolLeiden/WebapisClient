@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+    <servlet>
+        <servlet-name>Options</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.Options</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Student</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.Student</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Employee</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.Employee</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>InsertEmployee</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.InsertEmployee</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Options</servlet-name>
+        <url-pattern>/Options</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Student</servlet-name>
+        <url-pattern>/Student</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Employee</servlet-name>
+        <url-pattern>/Employee</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>InsertEmployee</servlet-name>
+        <url-pattern>/InsertEmployee</url-pattern>
+    </servlet-mapping>
+    <session-config>
+        <session-timeout>
+            30
+        </session-timeout>
+    </session-config>
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/error.jsp</location>
+    </error-page>
+</web-app>
