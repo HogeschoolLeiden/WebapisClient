@@ -48,6 +48,16 @@
                         
                     </tr>
                     </c:forEach>
+                    <c:if test="${not empty requestScope.next}">
+                        <a href=" <c:out value='${next}'/>">
+                            Next
+                        </a>
+                    </c:if>
+                    <c:if test="${not empty requestScope.previous}">
+                        <a href=" <c:out value='${requestScope.previous}' />">
+                            Previous
+                        </a>
+                    </c:if>   
                 </c:if>
             </table>
         </section>
