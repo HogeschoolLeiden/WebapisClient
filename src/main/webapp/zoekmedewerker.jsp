@@ -18,6 +18,8 @@
             
             <h2>Zoek een medewerker: </h2>
             Voer een achternaam (minimaal 2 tekens) in: <input type="text" name="achternaam" placeholder="achternaam"><br>
+            <input type="text" name="max" placeholder="max"><br>
+            <input type="text" name="offset" placeholder="offset"><br>
             <p><input type="submit" >
         </form>
         
