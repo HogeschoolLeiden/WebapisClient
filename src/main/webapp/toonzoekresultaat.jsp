@@ -41,8 +41,8 @@
                         <tr>
                         
                         <td>
-                            <a href=" <c:out value='${person.getString("uri")}' />"> 
-                            <c:out value='${person.getString("listname")}' />
+                            <a href=" <c:out value='${person.opt("uri")}' />"> 
+                            <c:out value='${person.opt("listname")}' />
                             </a>
                         </td>
                         
