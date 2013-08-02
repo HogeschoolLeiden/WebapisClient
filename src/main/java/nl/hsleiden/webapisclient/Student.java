@@ -29,7 +29,7 @@ public class Student extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(InsertImage.class.getName());
+        org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Student.class.getName());
 
         request.setCharacterEncoding("UTF-8");
         String achternaam = request.getParameter("achternaam");
@@ -42,10 +42,12 @@ public class Student extends HttpServlet {
         InputStream in = Student.class.getResourceAsStream("/webapis.properties");
         props.load(in);
 
+        String max = request.getParameter("max");
+        String offset = request.getParameter("offset");
         WebResource resource = c.resource(props.getProperty("studenturl") + "/" + achternaam);
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("max", "2");
-        params.add("offset", "0");
+        params.add("max", max);
+        params.add("offset", offset);
 
         resource.accept("application/json");
         String result = resource.queryParams(params).get(String.class);
