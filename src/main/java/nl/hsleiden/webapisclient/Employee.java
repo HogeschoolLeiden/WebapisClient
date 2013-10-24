@@ -62,8 +62,10 @@ public class Employee extends HttpServlet {
         
         String max = request.getParameter("max");
         String offset = request.getParameter("offset");
-        WebResource resource = c.resource(props.getProperty("employeeurl") + "/" + achternaam);
+        WebResource resource = c.resource(props.getProperty("employeeurl"));
+        
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("lastname", achternaam);
         params.add("max", max);
         params.add("offset", offset);
 
@@ -73,17 +75,28 @@ public class Employee extends HttpServlet {
         logger.debug("Result: " + result);
         //bepaal of er 1 object is gevonden of een array van objecten 
         //Result result = jsonObject.get("result");
-        if (jsonObject.get("employees") instanceof JSONArray) {
-            JSONArray arr = (JSONArray) jsonObject.get("employees");
-            String next = (String) jsonObject.get("next");
-            String previous = (String) jsonObject.get("previous");
+        
+        
+//        if (jsonObject.get("results") instanceof JSONArray) {
+            JSONArray arr = (JSONArray) jsonObject.get("results");
+            
+            if (jsonObject.get("next") != null  && !jsonObject.get("next").equals("null")) {
+                String next = (String) jsonObject.get("next");
+                request.setAttribute("next", next);
+            }
+            logger.debug("Previous: " + jsonObject.get("previous"));
+            if (jsonObject.get("previous") != null && !jsonObject.get("previous").equals("null")) {
+                String previous = (String) jsonObject.get("previous");
+                request.setAttribute("previous", previous);
+            }
+            
             request.setAttribute("persons", arr);
-            request.setAttribute("next", next);
-            request.setAttribute("previous", previous);
-        } else if (jsonObject.getJSONObject("employees") instanceof JSONObject) {
-            JSONObject person = jsonObject.getJSONObject("employees");
-            request.setAttribute("person", person);
-        }
+            
+            
+//        } else if (jsonObject.getJSONObject("results") instanceof JSONObject) {
+//            JSONObject person = jsonObject.getJSONObject("employees");
+//            request.setAttribute("person", person);
+//        }
         response.setContentType("text/html;charset=UTF-8");
         request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
     }

@@ -16,6 +16,14 @@
         <servlet-name>InsertEmployee</servlet-name>
         <servlet-class>nl.hsleiden.webapisclient.InsertEmployee</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>InsertImage</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.InsertImage</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>DisplayImage</servlet-name>
+        <servlet-class>nl.hsleiden.webapisclient.DisplayImage</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Options</servlet-name>
         <url-pattern>/Options</url-pattern>
@@ -31,6 +39,14 @@
     <servlet-mapping>
         <servlet-name>InsertEmployee</servlet-name>
         <url-pattern>/InsertEmployee</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>InsertImage</servlet-name>
+        <url-pattern>/InsertImage</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DisplayImage</servlet-name>
+        <url-pattern>/DisplayImage</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

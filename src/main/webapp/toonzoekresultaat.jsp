@@ -24,18 +24,7 @@
                         <td>Naam</td>
                     </tr>
                 </thead>
-                <c:if test="${not empty requestScope.person}">
-                   
-                    <tr>
-                        <td>
-                            <a href=" <c:out value='${requestScope.person.opt("uri")}' />"> 
-                                <c:out value='${requestScope.person.opt("listname")}' />
-                            </a>
-                            
-                        </td>
-                    </tr>
-
-                </c:if>
+               
                 <c:if test="${not empty requestScope.persons}">
                     <c:forEach items="${persons}" var="person">
                         <tr>
