@@ -4,10 +4,10 @@
  */
 package nl.hsleiden.webapisclient;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+//import com.sun.jersey.api.client.Client;
+//import com.sun.jersey.api.client.ClientResponse;
+//import com.sun.jersey.api.client.WebResource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -15,12 +15,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
  *
@@ -50,27 +54,25 @@ public class Employee extends HttpServlet {
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Employee.class.getName());
         request.setCharacterEncoding("UTF-8");
         String achternaam = request.getParameter("achternaam");
-        if (achternaam == null || achternaam.trim().isEmpty()) {
-            throw new ServletException("Geen parameter ingevoerd");
-        }
-
-        Client c = new Client();
+       
+        Client c = ClientBuilder.newClient().register(JacksonFeature.class);
         Properties props = new java.util.Properties();
-        
+    
         InputStream in = Employee.class.getResourceAsStream("/webapis.properties");
         props.load(in);
         
         String max = request.getParameter("max");
         String offset = request.getParameter("offset");
-        WebResource resource = c.resource(props.getProperty("employeeurl"));
+        WebTarget target = c.target(props.getProperty("employeeurl")).path("employees");
         
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("lastname", achternaam);
-        params.add("max", max);
-        params.add("offset", offset);
+        WebTarget queryTarget = target.queryParam("lastname", achternaam).queryParam("max", max).queryParam("offset", offset);
+        
+        logger.debug("Deze url wordt aangeroepen: " + queryTarget.getUri().toASCIIString());
 
-        resource.accept("application/json");
-        String result = resource.queryParams(params).get(String.class);
+        Invocation.Builder invocationBuilder = queryTarget.request(MediaType.APPLICATION_JSON_TYPE);
+        Response apiresponse = invocationBuilder.get();
+        String result =  apiresponse.readEntity(String.class);
+        
         JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
         logger.debug("Result: " + result);
         //bepaal of er 1 object is gevonden of een array van objecten 

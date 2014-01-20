@@ -4,17 +4,21 @@
  */
 package nl.hsleiden.webapisclient;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
  *
@@ -36,13 +40,19 @@ public class Options extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
-        Client c = new Client();
+        Client c = ClientBuilder.newClient().register(JacksonFeature.class);
         Properties props = new java.util.Properties();
         //FileInputStream fis = new FileInputStream("webapis.properties");
         InputStream in = Employee.class.getResourceAsStream("/webapis.properties");
         props.load(in);
-        WebResource resource = c.resource(props.getProperty("optionsurl"));
-        String result = resource.accept(MediaType.APPLICATION_XML_TYPE).get(String.class);
+        
+        WebTarget target = c.target(props.getProperty("optionsurl"));
+        
+        Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_XML_TYPE);
+        Response apiresponse = invocationBuilder.get();
+        String result =  apiresponse.readEntity(String.class);
+        
+        
         System.out.println("@@@@@@@@@@@@@@@@@" + result);
         request.setAttribute("result",result);
         response.setContentType("text/html;charset=UTF-8");

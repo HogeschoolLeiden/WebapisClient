@@ -4,19 +4,23 @@
  */
 package nl.hsleiden.webapisclient;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.json.JSONArray;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
  *
@@ -45,16 +49,19 @@ public class DisplayImage extends HttpServlet {
             throw new ServletException("Geen parameter ingevoerd");
         }
 
-        Client c = new Client();
+        Client c = ClientBuilder.newClient().register(JacksonFeature.class);
         Properties props = new java.util.Properties();
         
         InputStream in = Student.class.getResourceAsStream("/webapis.properties");
         props.load(in);
         
-        WebResource  resource = c.resource(props.getProperty("imageurl") + "/" + studentnummer);
-        WebResource.Builder builder = resource.header("Range", "Tada!");
+        WebTarget target = c.target(props.getProperty("imageurl") + "/" + studentnummer);
+        //WebResource.Builder builder = resource.header("Range", "Tada!");
        
-        String result = builder.accept("application/json").get(String.class);
+        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
+        Response apiresponse = builder.get();
+        String result =  apiresponse.readEntity(String.class);
+        
         logger.debug("Resultaat: " + result);
         JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
         //bepaal of er 1 object is gevonden of een array van objecten 
