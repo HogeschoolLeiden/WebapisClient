@@ -58,24 +58,26 @@ public class Employee extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         if (request.getSession().getAttribute("oAuthTokenHolder") == null && request.getSession().getAttribute("accessToken") == null) {
-            logger.debug("eerste keer");
+            logger.debug("Eerste keer in servlet, nu volgt deel 1 van de authorisatie: authoriszation grant door de gebruiker");
             response.sendRedirect("Authorize");
-
             response.flushBuffer();
         }
 
         if (request.getSession().getAttribute("accessToken") == null && request.getSession().getAttribute("oAuthTokenHolder") != null) {
-            logger.debug("we zijn weer terug");
+            
+            logger.debug("Tweede keer in de servlet, er is een authorization grant. Nu nog een accesstoken.");
             OAuthTokenHolder holder = (OAuthTokenHolder) request.getSession().getAttribute("oAuthTokenHolder");
             logger.debug("En dit is de holder: " + holder);
             final OAuth2CodeGrantFlow flow = holder.getFlow();
             String code = (String) request.getParameter("code");
             logger.debug("Code: " + code);
             logger.debug("State: " + request.getParameter("state"));
-
+           
             final TokenResult tokenResult = flow.finish(code, request.getParameter("state"));
 
             logger.debug("Accesstoken: " + tokenResult.getAccessToken());
+            holder.setAccessToken(tokenResult.getAccessToken());
+            request.getSession().setAttribute("accessToken", holder.getAccessToken());
         }
 
         if (request.getSession().getAttribute("accessToken") != null) {
