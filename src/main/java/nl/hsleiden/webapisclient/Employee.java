@@ -7,7 +7,6 @@ package nl.hsleiden.webapisclient;
 //import com.sun.jersey.api.client.Client;
 //import com.sun.jersey.api.client.ClientResponse;
 //import com.sun.jersey.api.client.WebResource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -24,6 +23,9 @@ import javax.ws.rs.core.Response;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
+import nl.hsleiden.webapisclient.oauth.OAuthTokenHolder;
+import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
+import org.glassfish.jersey.client.oauth2.TokenResult;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
@@ -37,6 +39,7 @@ public class Employee extends HttpServlet {
             throws ServletException, IOException {
         doPost(request, response);
     }
+
     /**
      * Processes requests for both HTTP
      * <code>GET</code> and
@@ -53,36 +56,59 @@ public class Employee extends HttpServlet {
 
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Employee.class.getName());
         request.setCharacterEncoding("UTF-8");
-        String achternaam = request.getParameter("achternaam");
-       
-        Client c = ClientBuilder.newClient().register(JacksonFeature.class);
-        Properties props = new java.util.Properties();
-    
-        InputStream in = Employee.class.getResourceAsStream("/webapis.properties");
-        props.load(in);
-        
-        String max = request.getParameter("max");
-        String offset = request.getParameter("offset");
-        WebTarget target = c.target(props.getProperty("employeeurl")).path("employees");
-        
-        WebTarget queryTarget = target.queryParam("lastname", achternaam).queryParam("max", max).queryParam("offset", offset);
-        
-        logger.debug("Deze url wordt aangeroepen: " + queryTarget.getUri().toASCIIString());
 
-        Invocation.Builder invocationBuilder = queryTarget.request(MediaType.APPLICATION_JSON_TYPE);
-        Response apiresponse = invocationBuilder.get();
-        String result =  apiresponse.readEntity(String.class);
-        
-        JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
-        logger.debug("Result: " + result);
-        //bepaal of er 1 object is gevonden of een array van objecten 
-        //Result result = jsonObject.get("result");
-        
-        
+        if (request.getSession().getAttribute("oAuthTokenHolder") == null && request.getSession().getAttribute("accessToken") == null) {
+            logger.debug("eerste keer");
+            response.sendRedirect("Authorize");
+
+            response.flushBuffer();
+        }
+
+        if (request.getSession().getAttribute("accessToken") == null && request.getSession().getAttribute("oAuthTokenHolder") != null) {
+            logger.debug("we zijn weer terug");
+            OAuthTokenHolder holder = (OAuthTokenHolder) request.getSession().getAttribute("oAuthTokenHolder");
+            logger.debug("En dit is de holder: " + holder);
+            final OAuth2CodeGrantFlow flow = holder.getFlow();
+            String code = (String) request.getParameter("code");
+            logger.debug("Code: " + code);
+            logger.debug("State: " + request.getParameter("state"));
+
+            final TokenResult tokenResult = flow.finish(code, request.getParameter("state"));
+
+            logger.debug("Accesstoken: " + tokenResult.getAccessToken());
+        }
+
+        if (request.getSession().getAttribute("accessToken") != null) {
+            String achternaam = request.getParameter("achternaam");
+
+            Client c = ClientBuilder.newClient().register(JacksonFeature.class);
+            Properties props = new java.util.Properties();
+
+            InputStream in = Employee.class.getResourceAsStream("/webapis.properties");
+            props.load(in);
+
+            String max = request.getParameter("max");
+            String offset = request.getParameter("offset");
+            WebTarget target = c.target(props.getProperty("employeeurl")).path("employees");
+
+            WebTarget queryTarget = target.queryParam("lastname", achternaam).queryParam("max", max).queryParam("offset", offset);
+
+            logger.debug("Deze url wordt aangeroepen: " + queryTarget.getUri().toASCIIString());
+
+            Invocation.Builder invocationBuilder = queryTarget.request(MediaType.APPLICATION_JSON_TYPE);
+            Response apiresponse = invocationBuilder.get();
+            String result = apiresponse.readEntity(String.class);
+
+            JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
+            logger.debug("Result: " + result);
+            //bepaal of er 1 object is gevonden of een array van objecten 
+            //Result result = jsonObject.get("result");
+
+
 //        if (jsonObject.get("results") instanceof JSONArray) {
             JSONArray arr = (JSONArray) jsonObject.get("results");
-            
-            if (jsonObject.get("next") != null  && !jsonObject.get("next").equals("null")) {
+
+            if (jsonObject.get("next") != null && !jsonObject.get("next").equals("null")) {
                 String next = (String) jsonObject.get("next");
                 request.setAttribute("next", next);
             }
@@ -91,15 +117,20 @@ public class Employee extends HttpServlet {
                 String previous = (String) jsonObject.get("previous");
                 request.setAttribute("previous", previous);
             }
-            
+
             request.setAttribute("persons", arr);
-            
-            
+
+
 //        } else if (jsonObject.getJSONObject("results") instanceof JSONObject) {
 //            JSONObject person = jsonObject.getJSONObject("employees");
 //            request.setAttribute("person", person);
 //        }
-        response.setContentType("text/html;charset=UTF-8");
-        request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
+            response.setContentType("text/html;charset=UTF-8");
+            request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
+        }
+        
+        else {
+            logger.debug("geen accestoken");
+        }
     }
 }
