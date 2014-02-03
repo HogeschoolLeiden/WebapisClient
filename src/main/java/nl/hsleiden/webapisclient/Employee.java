@@ -4,9 +4,6 @@
  */
 package nl.hsleiden.webapisclient;
 
-//import com.sun.jersey.api.client.Client;
-//import com.sun.jersey.api.client.ClientResponse;
-//import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -14,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -57,14 +55,25 @@ public class Employee extends HttpServlet {
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Employee.class.getName());
         request.setCharacterEncoding("UTF-8");
 
+        // Controleer of er een authorisationtoken of een accesstoken zijn voor de gebruiker
+        // Als beiden ontbreken start de authorisatie flow. De gebruiker wordt geredirect
         if (request.getSession().getAttribute("oAuthTokenHolder") == null && request.getSession().getAttribute("accessToken") == null) {
-            logger.debug("Eerste keer in servlet, nu volgt deel 1 van de authorisatie: authoriszation grant door de gebruiker");
+            logger.debug("Eerste keer in servlet, nu volgt deel 1 van de authorisatie: authorization grant door de gebruiker");
+            String achternaam = request.getParameter("achternaam");
+            String max = request.getParameter("max");
+            String offset = request.getParameter("offset");
+            HttpSession session = request.getSession();
+            session.setAttribute("max", max);
+            session.setAttribute("offset", offset);
+            session.setAttribute("achternaam", achternaam);
+            session.setAttribute("params", "yes");
+
             response.sendRedirect("Authorize");
             response.flushBuffer();
         }
 
+        // Als er een oAuthTokenHolder is (authorizationGrant) en geen accesstoken moet dit worden opgehaald
         if (request.getSession().getAttribute("accessToken") == null && request.getSession().getAttribute("oAuthTokenHolder") != null) {
-            
             logger.debug("Tweede keer in de servlet, er is een authorization grant. Nu nog een accesstoken.");
             OAuthTokenHolder holder = (OAuthTokenHolder) request.getSession().getAttribute("oAuthTokenHolder");
             logger.debug("En dit is de holder: " + holder);
@@ -80,19 +89,31 @@ public class Employee extends HttpServlet {
             request.getSession().setAttribute("accessToken", holder.getAccessToken());
         }
 
+        // Als er een accesstoken is mag de data worden opgehaald
         if (request.getSession().getAttribute("accessToken") != null) {
-            String achternaam = request.getParameter("achternaam");
 
             Client c = ClientBuilder.newClient().register(JacksonFeature.class);
             Properties props = new java.util.Properties();
 
             InputStream in = Employee.class.getResourceAsStream("/webapis.properties");
             props.load(in);
-
-            String max = request.getParameter("max");
-            String offset = request.getParameter("offset");
+            
+            String achternaam = null;
+            String max = null;
+            String offset = null;
+            String params = (String) request.getSession().getAttribute("params");
+            if (params != null && params.length() > 0) {
+                achternaam = (String) request.getSession().getAttribute("achternaam");
+                max = (String) request.getSession().getAttribute("max");
+                offset = (String) request.getSession().getAttribute("offset");
+                request.getSession().removeAttribute("params"); // hebben we niet meer nodig
+            } else {
+                achternaam = request.getParameter("achternaam");
+                max = request.getParameter("max");
+                offset = request.getParameter("offset");
+            }
+            
             WebTarget target = c.target(props.getProperty("employeeurl")).path("employees");
-
             WebTarget queryTarget = target.queryParam("lastname", achternaam).queryParam("max", max).queryParam("offset", offset);
 
             logger.debug("Deze url wordt aangeroepen: " + queryTarget.getUri().toASCIIString());
@@ -106,8 +127,6 @@ public class Employee extends HttpServlet {
             //bepaal of er 1 object is gevonden of een array van objecten 
             //Result result = jsonObject.get("result");
 
-
-//        if (jsonObject.get("results") instanceof JSONArray) {
             JSONArray arr = (JSONArray) jsonObject.get("results");
 
             if (jsonObject.get("next") != null && !jsonObject.get("next").equals("null")) {
@@ -121,17 +140,9 @@ public class Employee extends HttpServlet {
             }
 
             request.setAttribute("persons", arr);
-
-
-//        } else if (jsonObject.getJSONObject("results") instanceof JSONObject) {
-//            JSONObject person = jsonObject.getJSONObject("employees");
-//            request.setAttribute("person", person);
-//        }
             response.setContentType("text/html;charset=UTF-8");
             request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
-        }
-        
-        else {
+        } else {
             logger.debug("geen accestoken");
         }
     }

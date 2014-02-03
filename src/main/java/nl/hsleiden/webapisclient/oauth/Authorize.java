@@ -5,12 +5,10 @@
 package nl.hsleiden.webapisclient.oauth;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nl.hsleiden.webapisclient.Employee;
 import org.glassfish.jersey.client.oauth2.ClientIdentifier;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
@@ -40,7 +38,8 @@ public class Authorize extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         String clientId = getInitParameter("clientId");
         String clientSecret = getInitParameter("clientSecret");
-
+        
+        logger.debug("Achternaam waarop wordt gezocht: " + request.getParameter("achternaam"));
         ClientIdentifier clientIdentifier = new ClientIdentifier(clientId, clientSecret);
         log("ClientIdentifier aangemaakt" + clientId);
         final OAuth2CodeGrantFlow flow = OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(
