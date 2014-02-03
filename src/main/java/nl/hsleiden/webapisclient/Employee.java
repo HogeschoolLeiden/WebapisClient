@@ -6,6 +6,7 @@ package nl.hsleiden.webapisclient;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -121,29 +122,55 @@ public class Employee extends HttpServlet {
             Invocation.Builder invocationBuilder = queryTarget.request(MediaType.APPLICATION_JSON_TYPE);
             Response apiresponse = invocationBuilder.get();
             String result = apiresponse.readEntity(String.class);
+            
+            int status = apiresponse.getStatus();
+            logger.debug( "Statuscode in servlet: " + status);
+            if (status == 404) {
+                logger.debug("Als het goed is kom ik hier niet");
+                showPage(response, request, status);
+            } else {
 
-            JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
-            logger.debug("Result: " + result);
-            //bepaal of er 1 object is gevonden of een array van objecten 
-            //Result result = jsonObject.get("result");
+                JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON(result);
+                logger.debug("Result: " + result);
+                //bepaal of er 1 object is gevonden of een array van objecten 
+                //Result result = jsonObject.get("result");
 
-            JSONArray arr = (JSONArray) jsonObject.get("results");
+                JSONArray arr = (JSONArray) jsonObject.get("results");
 
-            if (jsonObject.get("next") != null && !jsonObject.get("next").equals("null")) {
-                String next = (String) jsonObject.get("next");
-                request.setAttribute("next", next);
+                if (jsonObject.get("next") != null && !jsonObject.get("next").equals("null")) {
+                    String next = (String) jsonObject.get("next");
+                    request.setAttribute("next", next);
+                }
+                logger.debug("Previous: " + jsonObject.get("previous"));
+                if (jsonObject.get("previous") != null && !jsonObject.get("previous").equals("null")) {
+                    String previous = (String) jsonObject.get("previous");
+                    request.setAttribute("previous", previous);
+                }
+                request.setAttribute("persons", arr);
+                response.setContentType("text/html;charset=UTF-8");
+                request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
             }
-            logger.debug("Previous: " + jsonObject.get("previous"));
-            if (jsonObject.get("previous") != null && !jsonObject.get("previous").equals("null")) {
-                String previous = (String) jsonObject.get("previous");
-                request.setAttribute("previous", previous);
-            }
-
-            request.setAttribute("persons", arr);
-            response.setContentType("text/html;charset=UTF-8");
-            request.getRequestDispatcher("toonzoekresultaat.jsp").forward(request, response);
         } else {
             logger.debug("geen accestoken");
+        }
+    }
+    
+    private void showPage(HttpServletResponse response, HttpServletRequest request, int status)  throws ServletException, IOException {
+        PrintWriter out = response.getWriter();
+        try {
+            /* TODO output your page here. You may use following sample code. */
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Foutmelding</title>");            
+            out.println("</head>");
+            out.println("<body>");
+            out.println("Statuscode " + status);
+            out.println("Info: " + response.getHeaderNames());
+            out.println("</body>");
+            out.println("</html>");
+        } finally {            
+            out.close();
         }
     }
 }
