@@ -79,7 +79,8 @@ public class Employee extends HttpServlet {
             session.setAttribute("offset", offset);
             session.setAttribute("achternaam", achternaam);
             session.setAttribute("params", "yes");
-
+            String redirectUri = "http://localhost:8080/WebapisClient/Employee";
+            session.setAttribute("redirecturi", redirectUri);
             response.sendRedirect("Authorize");
             response.flushBuffer();
         }

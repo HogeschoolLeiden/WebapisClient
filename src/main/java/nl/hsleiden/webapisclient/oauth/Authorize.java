@@ -49,15 +49,21 @@ public class Authorize extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         String clientId = getInitParameter("clientId");
         String clientSecret = getInitParameter("clientSecret");
-        
         logger.debug("Achternaam waarop wordt gezocht: " + request.getParameter("achternaam"));
         ClientIdentifier clientIdentifier = new ClientIdentifier(clientId, clientSecret);
         log("ClientIdentifier aangemaakt" + clientId);
-        final OAuth2CodeGrantFlow flow = OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(
+        
+        String redirectUri = (String) request.getSession().getAttribute("redirecturi");
+        logger.debug("This is the redirecturi: " + redirectUri);
+        
+        final OAuth2CodeGrantFlow.Builder builder = OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(
                 clientIdentifier,
                 "http://localhost:8080/AuthorizationServices/Consent",
-                "http://localhost:8080/AuthorizationServices/v1/accesstoken").build();
+                "http://localhost:8080/AuthorizationServices/v1/accesstoken");
 
+        OAuth2CodeGrantFlow flow = builder.redirectUri(redirectUri)
+                .property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, "redirecturi", redirectUri)
+                .build();
         OAuthTokenHolder holder = new OAuthTokenHolder();
         holder.setFlow(flow);
         request.getSession().setAttribute("oAuthTokenHolder", holder);
